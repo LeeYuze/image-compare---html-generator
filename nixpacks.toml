@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ['nodejs_22', 'pnpm']
+
+# 安装依赖，并启用 pnpm 缓存
+[phases.install]
+cmds = ["pnpm install"]
+cacheDirectories = ["/root/.local/share/pnpm/store/v3"]
+
+cacheDirectories = [
+  "node_modules/.cache",
+  "astro_cache"
+]
+
+[start]
+cmd = 'pnpm start'
