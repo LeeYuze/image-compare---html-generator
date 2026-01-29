@@ -1,0 +1,5 @@
+{
+  "name": "Image Compare & HTML Generator",
+  "description": "A professional tool for comparing multiple images in a grid layout, providing real-time visual previews and automatically generating specific HTML table code for each image, similar to an Excel-based workflow.",
+  "requestFramePermissions": []
+}
