@@ -103,9 +103,56 @@ const App: React.FC = () => {
   };
 
   const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    // 兼容 IE 和旧浏览器的复制方法
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      // 现代浏览器使用 Clipboard API
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          setCopiedId(id);
+          setTimeout(() => setCopiedId(null), 2000);
+        })
+        .catch(() => {
+          // 如果 Clipboard API 失败，降级到传统方法
+          fallbackCopyToClipboard(text, id);
+        });
+    } else {
+      // IE 和旧浏览器使用传统方法
+      fallbackCopyToClipboard(text, id);
+    }
+  };
+
+  const fallbackCopyToClipboard = (text: string, id: string) => {
+    // 创建临时 textarea 元素
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.width = '2em';
+    textarea.style.height = '2em';
+    textarea.style.padding = '0';
+    textarea.style.border = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.boxShadow = 'none';
+    textarea.style.background = 'transparent';
+    textarea.style.opacity = '0';
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      // 使用 execCommand 复制（兼容 IE）
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      }
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
+
+    document.body.removeChild(textarea);
   };
 
   return (
