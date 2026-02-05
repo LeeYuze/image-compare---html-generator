@@ -55,6 +55,7 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<MatrixConfig>(DEFAULT_CONFIG);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isInputCollapsed, setIsInputCollapsed] = useState<Record<string, boolean>>({});
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Persistence - 只需要保存，不需要加载（已在 useState 中处理）
   useEffect(() => {
@@ -276,13 +277,12 @@ const App: React.FC = () => {
                           (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=Error';
                         }}
                       />
-                      <a
-                        href={url}
-                        target="_blank"
-                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity text-white"
+                      <button
+                        onClick={() => setPreviewImage(url)}
+                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity text-white cursor-pointer"
                       >
                         <ExternalLink size={14} />
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -320,6 +320,31 @@ const App: React.FC = () => {
           准备批量处理
         </p>
       </footer>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-red-400 transition-colors"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img
+              src={previewImage}
+              alt="预览"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
