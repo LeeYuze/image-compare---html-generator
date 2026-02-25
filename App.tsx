@@ -92,6 +92,17 @@ const App: React.FC = () => {
     }));
   };
 
+  const updateUrl = (columnId: string, urlIndex: number, newUrl: string) => {
+    setColumns(columns.map(c => {
+      if (c.id === columnId) {
+        const newUrls = [...c.urls];
+        newUrls[urlIndex] = newUrl;
+        return { ...c, urls: newUrls };
+      }
+      return c;
+    }));
+  };
+
   const toggleInput = (id: string) => {
     setIsInputCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -221,11 +232,10 @@ const App: React.FC = () => {
               <div className="p-3 bg-white border-b border-slate-200 shrink-0">
                 <div className="relative group">
                   <textarea
-                    key={`${col.id}-${col.urls.length}`}
                     className="w-full h-32 p-3 text-[11px] font-mono bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none custom-scrollbar"
                     placeholder="在此粘贴图片URL&#10;每行一个URL..."
-                    defaultValue={col.urls.join('\n')}
-                    onBlur={e => updateColumnUrls(col.id, e.target.value)}
+                    value={col.urls.join('\n')}
+                    onChange={e => updateColumnUrls(col.id, e.target.value)}
                   />
                   <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-indigo-600 rounded text-[9px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
                     已检测到 {col.urls.length} 个URL
@@ -261,9 +271,13 @@ const App: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                    <div className="bg-slate-50 rounded-md p-2 text-[10px] font-mono text-slate-600 break-all select-all border border-slate-200">
-                      {url}
-                    </div>
+                    <input
+                      type="text"
+                      value={url}
+                      onChange={(e) => updateUrl(col.id, index, e.target.value)}
+                      className="w-full bg-slate-50 rounded-md p-2 text-[10px] font-mono text-slate-600 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                      placeholder="输入图片URL..."
+                    />
                   </div>
 
                   {/* Image Preview */}
