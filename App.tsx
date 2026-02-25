@@ -103,6 +103,18 @@ const App: React.FC = () => {
     }));
   };
 
+  const insertUrl = (columnId: string, urlIndex: number, position: 'above' | 'below') => {
+    setColumns(columns.map(c => {
+      if (c.id === columnId) {
+        const newUrls = [...c.urls];
+        const insertIndex = position === 'above' ? urlIndex : urlIndex + 1;
+        newUrls.splice(insertIndex, 0, '');
+        return { ...c, urls: newUrls };
+      }
+      return c;
+    }));
+  };
+
   const toggleInput = (id: string) => {
     setIsInputCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -293,6 +305,26 @@ const App: React.FC = () => {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">#{index + 1} 图片地址</span>
                       <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => insertUrl(col.id, index, 'above')}
+                          className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-all bg-blue-50 text-blue-600 hover:bg-blue-100"
+                          title="在上方插入空项"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                          上插
+                        </button>
+                        <button
+                          onClick={() => insertUrl(col.id, index, 'below')}
+                          className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-all bg-blue-50 text-blue-600 hover:bg-blue-100"
+                          title="在下方插入空项"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          下插
+                        </button>
                         <button
                           onClick={() => copyToClipboard(url, `${col.id}-${index}-url`)}
                           className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${
