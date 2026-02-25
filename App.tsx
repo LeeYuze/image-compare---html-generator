@@ -55,7 +55,7 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<MatrixConfig>(DEFAULT_CONFIG);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isInputCollapsed, setIsInputCollapsed] = useState<Record<string, boolean>>({});
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; columnId: string; index: number } | null>(null);
 
   // Persistence - 只需要保存，不需要加载（已在 useState 中处理）
   useEffect(() => {
@@ -106,6 +106,46 @@ const App: React.FC = () => {
   const toggleInput = (id: string) => {
     setIsInputCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  const navigatePreview = (direction: 'prev' | 'next') => {
+    if (!previewImage) return;
+
+    const column = columns.find(c => c.id === previewImage.columnId);
+    if (!column) return;
+
+    let newIndex = previewImage.index;
+    if (direction === 'prev') {
+      newIndex = previewImage.index > 0 ? previewImage.index - 1 : column.urls.length - 1;
+    } else {
+      newIndex = previewImage.index < column.urls.length - 1 ? previewImage.index + 1 : 0;
+    }
+
+    setPreviewImage({
+      url: column.urls[newIndex],
+      columnId: previewImage.columnId,
+      index: newIndex
+    });
+  };
+
+  // 键盘事件监听
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!previewImage) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigatePreview('prev');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigatePreview('next');
+      } else if (e.key === 'Escape') {
+        setPreviewImage(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewImage, columns]);
 
   const generateHTML = (url: string) => {
     if (!url) return '';
@@ -292,7 +332,7 @@ const App: React.FC = () => {
                         }}
                       />
                       <button
-                        onClick={() => setPreviewImage(url)}
+                        onClick={() => setPreviewImage({ url, columnId: col.id, index })}
                         className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity text-white cursor-pointer"
                       >
                         <ExternalLink size={14} />
@@ -338,24 +378,61 @@ const App: React.FC = () => {
       {/* Image Preview Modal */}
       {previewImage && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4"
+          className="fixed inset-0 bg-black/80 z-[100]"
           onClick={() => setPreviewImage(null)}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
+          {/* 关闭按钮 - 浏览器右上角 */}
+          <button
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-8 right-8 text-white hover:text-red-400 transition-colors z-20"
+          >
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* 主内容区 - 左箭头、图片、右箭头 */}
+          <div className="h-full flex items-center justify-between px-8">
+            {/* 左箭头 - 浏览器左侧 */}
             <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-10 right-0 text-white hover:text-red-400 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigatePreview('prev');
+              }}
+              className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all backdrop-blur-sm z-10 flex-shrink-0"
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <img
-              src={previewImage}
-              alt="预览"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+
+            {/* 图片容器 */}
+            <div className="relative flex-1 flex items-center justify-center">
+              <img
+                src={previewImage.url}
+                alt="预览"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+
+              {/* 图片信息 */}
+              <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
+                {previewImage.index + 1} / {columns.find(c => c.id === previewImage.columnId)?.urls.length || 0}
+              </div>
+            </div>
+
+            {/* 右箭头 - 浏览器右侧 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigatePreview('next');
+              }}
+              className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all backdrop-blur-sm z-10 flex-shrink-0"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
         </div>
       )}
