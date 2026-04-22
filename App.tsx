@@ -79,7 +79,8 @@ const App: React.FC = () => {
   };
 
   const updateColumnUrls = (id: string, urlsString: string) => {
-    const urls = urlsString.split('\n').map(u => u.trim()).filter(u => u !== '');
+    const normalizedUrls = urlsString.replace(/\r\n/g, '\n');
+    const urls = normalizedUrls === '' ? [] : normalizedUrls.split('\n').map(u => u.trim());
     setColumns(columns.map(c => c.id === id ? { ...c, urls } : c));
   };
 
@@ -290,7 +291,7 @@ const App: React.FC = () => {
                     onChange={e => updateColumnUrls(col.id, e.target.value)}
                   />
                   <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-indigo-600 rounded text-[9px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                    已检测到 {col.urls.length} 个URL
+                    已检测到 {col.urls.length} 项
                   </div>
                 </div>
               </div>
@@ -347,6 +348,12 @@ const App: React.FC = () => {
                       type="text"
                       value={url}
                       onChange={(e) => updateUrl(col.id, index, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          insertUrl(col.id, index, 'below');
+                        }
+                      }}
                       className="w-full bg-slate-50 rounded-md p-2 text-[10px] font-mono text-slate-600 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                       placeholder="输入图片URL..."
                     />
@@ -355,20 +362,29 @@ const App: React.FC = () => {
                   {/* Image Preview */}
                   <div className="flex justify-center">
                     <div className="w-20 h-20 bg-slate-100 rounded-md border border-slate-100 flex items-center justify-center overflow-hidden relative group/img">
-                      <img
-                        src={url}
-                        alt={`Img ${index}`}
-                        className="max-h-full max-w-full object-contain transition-transform group-hover/img:scale-110"
-                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=Error';
-                        }}
-                      />
-                      <button
-                        onClick={() => setPreviewImage({ url, columnId: col.id, index })}
-                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity text-white cursor-pointer"
-                      >
-                        <ExternalLink size={14} />
-                      </button>
+                      {url ? (
+                        <>
+                          <img
+                            src={url}
+                            alt={`Img ${index}`}
+                            className="max-h-full max-w-full object-contain transition-transform group-hover/img:scale-110"
+                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=Error';
+                            }}
+                          />
+                          <button
+                            onClick={() => setPreviewImage({ url, columnId: col.id, index })}
+                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity text-white cursor-pointer"
+                          >
+                            <ExternalLink size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-300">
+                          <ImageIcon size={20} strokeWidth={1.5} />
+                          <span className="mt-1 text-[9px] font-bold uppercase tracking-widest">空白项</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
